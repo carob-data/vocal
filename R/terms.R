@@ -14,100 +14,8 @@ get_groups <- function() {
 }
 
 
-
-term_paths <- function(local_terms=NULL) {
-   list(
-	   git_path="reagro/terminag",
-       local_path= local_terms
-   )
-}
-
-update_terms <- function(quiet=FALSE, force=FALSE, local_terms=NULL) {
-
-    org <- term_paths(local_terms=local_terms)
-    if ((is.null(org$git_path)) & (is.null(org$local_path))) {
-		warning("terms paths are empty")
-		return(NULL)
-	}
-
-	p <- file.path(rappdirs::user_data_dir(), ".carob/terminag")
-	dir.create(file.path(p, "variables"), FALSE, TRUE)
-	dir.create(file.path(p, "values"), FALSE, TRUE)
-
-    if (!is.null(org$git_path)) {
-		burl <- file.path("https://api.github.com/repos", org$git_path)
-  	   	v <- readLines(file.path(burl, "commits/main"))
-		gsha <- jsonlite::fromJSON(v)$sha
-
-		f <- file.path(p, "sha.txt")
-		continue <- TRUE
-		if (!force && file.exists(f)) {
-			rsha <- readLines(f)
-			if (gsha == rsha) {
-				if (!quiet) message("terms were up to date")
-				continue <- FALSE
-			}
-		}
-		git_updated <- FALSE
-		if (continue) {
-			writeLines(gsha, file.path(p, "sha.txt"))	
-			req <- httr::GET(file.path(burl, "git/trees/main?recursive=1"))
-			httr::stop_for_status(req)
-			ff <- sapply(httr::content(req)$tree, function(i) i$path)
-			ff <- grep("\\.csv$", ff, value = TRUE)
-    		rurl <- file.path("https://raw.githubusercontent.com", org$git_path)
-			ff <- file.path(rurl, "main", ff)
-			i <- grepl("variables_", ff)
-			pva <- c("values", "variables")[i+1]
-			pva <- file.path(p, pva, basename(ff))
-			for (i in 1:length(ff)) {
-				utils::download.file(ff[i], pva[i], quiet=TRUE)
-			}
-			git_updated <- TRUE
-			#gv <- readLines("https://raw.githubusercontent.com/reagro/terminag/main/version.txt", warn = FALSE)
-			#gv <- trimws(unlist(strsplit(gv[grep("version", gv)], "="))[2])
-			#f <- system.file("terms/version.txt", package="carobiner")
-			#if (!file.exist(f)) return(TRUE)
-			#rv <- readLines(f)
-			#rv <- trimws(unlist(strsplit(rv[grep("version", rv)], "="))[2])
-		}
-	}
-    if (!is.null(org$local_path)) {
-    	lf <- list.files(org$local_path, recursive = TRUE) 
-		if (length(lf) > 0) {
-		   	pf <- list.files(p, recursive = TRUE)
-			for (i in 1:length(lf)) {
-			  if (basename(lf[i]) %in% basename(pf)) {
-			    v1 <- utils::read.csv(file.path(p, pf[grepl(basename(lf[i]), pf)]))
-			    v2 <- utils::read.csv(file.path(org$local_path, lf[i]))
-			    v <- NULL
-			    v <- try(rbind(v1, v2))
-			    if (!is.null(v)) {
-					#to avoid binding local multiple times if not git updated
-					#not in other cases to trigger a warning when the terms are used 
-					if (!git_updated) v <- unique(v)  
-					utils::write.csv(v, file.path(p, lf[i]), row.names=FALSE)
-				}
-			  } else {
-			    nt <- file.path(org$local_path, lf[i])
-			    ot <- file.path(p, lf[i])
-			    file.copy(nt, ot, overwrite=TRUE)
-			  }
-			}
-		}
-	}
-
-	if (!quiet) message("terms were updated")
-	invisible()
-}
-
-
-
-
-
-get_variables <- function(group) {
-	p <- file.path(rappdirs::user_data_dir(), ".carob/terminag")
-#	path <- system.file("terms", package="carobiner")
+get_variables <- function(group, voc="reagro/terminag") {
+	p <- terms_path(voc)
 	f <- file.path(p, "variables", paste0("variables_", group, ".csv"))		
 	if (file.exists(f)) {
 		utils::read.csv(f)	
@@ -116,27 +24,26 @@ get_variables <- function(group) {
 	}
 }
 
-get_variable_group_names <- function() {
-	p <- file.path(rappdirs::user_data_dir(), ".carob/terminag")
-#	path <- system.file("terms", package="carobiner")
+get_variable_group_names <- function(voc="reagro/terminag") {
+	p <- terms_path(voc)
 	gsub("^variables_|\\.csv$", "", list.files(file.path(p, "variables"), pattern="variables_.*.\\.csv$"))
 }
 
 #get_terms <- function(type, group, path) {
-accepted_variables <- function(type, group) {
+accepted_variables <- function(type, group, voc="reagro/terminag") {
 	if (type=="metadata") {
-		trms <- get_variables("metadata")
+		trms <- get_variables("metadata", voc)
 	} else if (type=="weather") {
-		trms <- get_variables("all")
+		trms <- get_variables("all", voc)
 		if (is.null(trms)) {
 			stop("Please first install the standard terms with 'carobiner::update_terms()'", call. = FALSE)
 		}
-		wth <- get_variables("weather")
+		wth <- get_variables("weather", voc)
 		loc <- get_variables("location")
 		trms <- rbind(trms, loc, wth)
 	} else { #"records", "timerecs"
 		
-		trms <- get_variables("all")
+		trms <- get_variables("all", voc)
 		if (is.null(trms)) {
 			stop("Please first install the standard terms with 'carobiner::update_terms()'", call. = FALSE)
 		}
@@ -154,17 +61,24 @@ accepted_variables <- function(type, group) {
 		} else {
 			include <- trimws(unlist(strsplit(include, ";")))
 		}
-		for (inc in include) {
-			add <- get_variables(inc)
-			trms <- rbind(trms, add)
+
+		if (length(include) > 0) {
+			add <- lapply(include, function(inc) get_variables(inc, voc))
+			trms <- rbind(trms, do.call(rbind, add))
+			
+			#for (inc in include) {
+			#	add <- get_variables(inc, voc)
+			#	trms <- rbind(trms, add)
+			#}
 		}
 	}
 	trms
 }
 
 
-accepted_values <- function(name) {
-	p <- file.path(rappdirs::user_data_dir(), ".carob/terminag")
+accepted_values <- function(name, voc="reagro/terminag") {
+	p <- terms_path(voc)
+#	p <- file.path(rappdirs::user_data_dir(), ".carob/terminag")
 #	path <- system.file("terms", package="carobiner")
 	f <- file.path(p, "values", paste0("values_", name, ".csv"))
 	if (file.exists(f)) {

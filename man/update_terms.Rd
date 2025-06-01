@@ -7,15 +7,16 @@ Update the accepted terms
 }
 
 \description{
-Update the accepted terms (variables and values) from the "terminag" repo. You must have permission to write to your "carobiner" package installation. 
+Update the accepted terms (variables and values) from a repo. 
 }
 
 
 \usage{
-update_terms(quiet=FALSE, force = FALSE, local_terms = NULL)
+update_terms(voc, quiet=FALSE, force = FALSE, local_terms = NULL)
 }
  
 \arguments{
+  \item{voc}{character. path to the github repo of the vocabulary. E.g. "reagro/terminag"}
   \item{quiet}{logical. If \code{TRUE} a message is printed}
   \item{force}{logical}
   \item{local_terms}{character (path)}
