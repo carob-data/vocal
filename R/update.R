@@ -30,6 +30,7 @@ update_terms <- function(voc, quiet=FALSE, force=FALSE, local_terms=NULL) {
 	}
 	git_updated <- FALSE
 	if (continue) {
+		message(paste("updating", voc, "to version", gsha)); utils::flush.console()
 		writeLines(gsha, file.path(pvoc, "sha.txt"))	
 		req <- httr::GET(file.path(burl, "git/trees/main?recursive=1"))
 		httr::stop_for_status(req)
@@ -55,14 +56,15 @@ update_terms <- function(voc, quiet=FALSE, force=FALSE, local_terms=NULL) {
 	if (git_updated) {
 		add_local(pvoc, local_terms)
 	}
-	if (!quiet) message("terms were updated")
-	invisible()
+	invisible(git_updated)
 }
 
 
 
-add_local <- function(voc, local_terms) {
+add_local <- function(voc, local_terms=NULL) {
  
+	if (is.null(local_terms)) return()
+	
 	voc_path <- terms_path(voc)
    	lf <- list.files(local_terms, recursive = TRUE) 
 	if (length(lf) > 0) {

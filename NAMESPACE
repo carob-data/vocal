@@ -1,1 +1,1 @@
-export(accepted_variables, accepted_values)
+export(accepted_variables, accepted_values, update_terms)
