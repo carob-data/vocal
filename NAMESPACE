@@ -1,1 +1,7 @@
-export(accepted_variables, accepted_values, update_terms)
+importFrom(terra, extract, crs)
+importFrom(geodata, world)
+
+export(
+accepted_variables, accepted_values, update_terms,
+check_type_range, check_date, check_datespan, check_lonlat, check_caps
+)

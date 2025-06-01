@@ -3,7 +3,7 @@ Type: Package
 Title: Check compliance
 Description: Check compliance with controlled vocabularies.
 Version: 0.1-0
-Imports: httr, jsonlite, rappdirs
+Imports: geodata, terra, httr, jsonlite, rappdirs
 Date: 2025-06-01
 Encoding: UTF-8
 Authors@R: c(
