@@ -183,11 +183,11 @@ check_datespan <- function(x, startdate, enddate, smin=0, smax=366) {
 	d <- as.numeric(e - s)
 	i <- d < smin #45
 	if (any(i)) { 
-		answ[nrow(answ)+1, ] <- c("datespan", paste(sum(i), " end date(s) within ", smin, " days after start date(s)"))
+		answ[nrow(answ)+1, ] <- c("datespan", paste(sum(i), "end date(s) within", smin, "days after start date(s)"))
 	} 
 	i <- d > smax #365
 	if (any(i)) { 
-		answ[nrow(answ)+1, ] <- c("datespan", paste(sum(i), " end date(s) more than ", smax, " days after start date(s)"))
+		answ[nrow(answ)+1, ] <- c("datespan", paste(sum(i), "end date(s) more than", smax, "days after start date(s)"))
 	} 
 	answ
 }
