@@ -14,7 +14,7 @@ get_groups <- function() {
 }
 
 
-get_variables <- function(group, voc="reagro/terminag") {
+get_variables <- function(group, voc="carob-data/terminag") {
 	p <- terms_path(voc)
 	f <- file.path(p, "variables", paste0("variables_", group, ".csv"))		
 	if (file.exists(f)) {
@@ -24,13 +24,13 @@ get_variables <- function(group, voc="reagro/terminag") {
 	}
 }
 
-get_variable_group_names <- function(voc="reagro/terminag") {
+get_variable_group_names <- function(voc="carob-data/terminag") {
 	p <- terms_path(voc)
 	gsub("^variables_|\\.csv$", "", list.files(file.path(p, "variables"), pattern="variables_.*.\\.csv$"))
 }
 
 #get_terms <- function(type, group, path) {
-accepted_variables <- function(type, group, voc="reagro/terminag") {
+accepted_variables <- function(type, group, voc="carob-data/terminag") {
 	if (type=="metadata") {
 		trms <- get_variables("metadata", voc)
 	} else if (type=="weather") {
@@ -76,7 +76,7 @@ accepted_variables <- function(type, group, voc="reagro/terminag") {
 }
 
 
-accepted_values <- function(name, voc="reagro/terminag") {
+accepted_values <- function(name, voc="carob-data/terminag") {
 	p <- terms_path(voc)
 #	p <- file.path(rappdirs::user_data_dir(), ".carob/terminag")
 #	path <- system.file("terms", package="carobiner")

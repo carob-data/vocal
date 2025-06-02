@@ -3,7 +3,7 @@
 terms_path <- function(voc) {
 	file.path(rappdirs::user_data_dir(), ".vocal", voc)
    #list(
-#	   git_path="reagro/terminag",
+#	   git_path="carob-data/terminag",
  #      local_path= local_terms
  #  )
 }
@@ -45,7 +45,7 @@ old_update_terms <- function(voc, quiet=FALSE, force=FALSE, local_terms=NULL) {
 			utils::download.file(ff[i], pva[i], quiet=TRUE)
 		}
 		git_updated <- TRUE
-		#gv <- readLines("https://raw.githubusercontent.com/reagro/terminag/main/version.txt", warn = FALSE)
+		#gv <- readLines("https://raw.githubusercontent.com/carob-data/terminag/main/version.txt", warn = FALSE)
 		#gv <- trimws(unlist(strsplit(gv[grep("version", gv)], "="))[2])
 		#f <- system.file("terms/version.txt", package="carobiner")
 		#if (!file.exist(f)) return(TRUE)
@@ -104,7 +104,7 @@ update_terms <- function(voc, quiet=FALSE, force=FALSE, local_terms=NULL) {
 
 		writeLines(gsha, file.path(pvoc, "sha.txt"))	
 		git_updated <- TRUE
-		#gv <- readLines("https://raw.githubusercontent.com/reagro/terminag/main/version.txt", warn = FALSE)
+		#gv <- readLines("https://raw.githubusercontent.com/carob-data/terminag/main/version.txt", warn = FALSE)
 		#gv <- trimws(unlist(strsplit(gv[grep("version", gv)], "="))[2])
 		#f <- system.file("terms/version.txt", package="carobiner")
 		#if (!file.exist(f)) return(TRUE)
