@@ -9,7 +9,7 @@ terms_path <- function(voc) {
 }
 
 
-update_terms <- function(voc, quiet=FALSE, force=FALSE, local_terms=NULL) {
+old_update_terms <- function(voc, quiet=FALSE, force=FALSE, local_terms=NULL) {
 	
 	pvoc <- terms_path(voc)
 	dir.create(file.path(pvoc, "variables"), FALSE, TRUE)
@@ -58,6 +58,66 @@ update_terms <- function(voc, quiet=FALSE, force=FALSE, local_terms=NULL) {
 	}
 	invisible(git_updated)
 }
+
+update_terms <- function(voc, quiet=FALSE, force=FALSE, local_terms=NULL) {
+	
+	pvoc <- vocal:::terms_path(voc)
+	#dir.create(file.path(pvoc, "variables"), FALSE, TRUE)
+	#dir.create(file.path(pvoc, "values"), FALSE, TRUE)
+
+	burl <- file.path("https://api.github.com/repos", voc)
+   	v <- readLines(file.path(burl, "commits/main"))
+	gsha <- jsonlite::fromJSON(v)$sha
+
+	f <- file.path(pvoc, "sha.txt")
+	continue <- TRUE
+	if (!force && file.exists(f)) {
+		rsha <- readLines(f)
+		if (gsha == rsha) {
+			if (!quiet) message("terms were up-to-date")
+			continue <- FALSE
+		}
+	}
+	git_updated <- FALSE
+	if (continue) {
+		message(paste("updating", voc, "to version", gsha)); utils::flush.console()
+		fzip = tempfile()
+		vocurl <- file.path("https://github.com/", voc, "archive/refs/heads/main.zip", fsep="/")
+		utils::download.file(vocurl, fzip, mode="wb", quiet = TRUE)
+		dzip <- tempfile()
+		unzip(fzip, exdir=dzip)
+	
+		ff <- list.files(dzip, recursive=TRUE, full.names=TRUE)
+		dd <- unique(dirname(ff))
+		dn <- nchar(dd)
+		dd <- dd[which.min(dn)]
+		dd <- paste0(basename(dd), "/")
+		
+		outf <- file.path(pvoc, sapply(strsplit(ff, dd), function(i) i[2]))
+		outd <- unique(dirname(outf))
+		for (d in outd) dir.create(d, FALSE, TRUE)
+		
+		exf <- list.files(pvoc, recursive=TRUE, full.names=TRUE)
+		file.remove(exf)
+		
+		file.copy(ff, outf)
+
+		writeLines(gsha, file.path(pvoc, "sha.txt"))	
+		git_updated <- TRUE
+		#gv <- readLines("https://raw.githubusercontent.com/reagro/terminag/main/version.txt", warn = FALSE)
+		#gv <- trimws(unlist(strsplit(gv[grep("version", gv)], "="))[2])
+		#f <- system.file("terms/version.txt", package="carobiner")
+		#if (!file.exist(f)) return(TRUE)
+		#rv <- readLines(f)
+		#rv <- trimws(unlist(strsplit(rv[grep("version", rv)], "="))[2])
+	}
+
+	if (git_updated) {
+		add_local(pvoc, local_terms)
+	}
+	invisible(git_updated)
+}
+
 
 
 
