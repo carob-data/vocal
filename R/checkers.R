@@ -183,11 +183,11 @@ check_datespan <- function(x, startdate, enddate, smin=0, smax=366) {
 	d <- as.numeric(e - s)
 	i <- d < smin #45
 	if (any(i)) { 
-		answ[nrow(answ)+1, ] <- c("datespan", paste(sum(i), "end date(s) within", smin, "days after start date(s)"))
+		answ[nrow(answ)+1, ] <- c("datespan", paste(sum(i), "records with", enddate, "within", smin, "days of", startdate))
 	} 
 	i <- d > smax #365
 	if (any(i)) { 
-		answ[nrow(answ)+1, ] <- c("datespan", paste(sum(i), "end date(s) more than", smax, "days after start date(s)"))
+		answ[nrow(answ)+1, ] <- c("datespan", paste(sum(i), enddate, "more than", smax, "days after", startdate))
 	} 
 	answ
 }
@@ -204,11 +204,11 @@ check_span <- function(x, start, end, smin=0, smax=366) {
 	d <- (e - s)
 	i <- d < smin #45
 	if (any(i)) { 
-		answ[nrow(answ)+1, ] <- c("span", paste(sum(i), " end(s) within ", smin, " of start(s)"))
+		answ[nrow(answ)+1, ] <- c("span", paste(sum(i), "records with", end, "within", smin, "of", start))
 	} 
 	i <- d > smax #365
 	if (any(i)) { 
-		answ[nrow(answ)+1, ] <- c("span", paste(sum(i), " end(s) more than ", smax, " days after start(s)"))
+		answ[nrow(answ)+1, ] <- c("span", paste(sum(i), "records with", end, "more than", smax, "of", start))
 	} 
 	answ
 }
