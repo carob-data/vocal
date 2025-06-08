@@ -59,9 +59,28 @@ old_update_terms <- function(voc, quiet=FALSE, force=FALSE, local_terms=NULL) {
 	invisible(git_updated)
 }
 
+
+clone_github <- function(name, path) {
+	fgz <- tempfile()
+	url <- paste0("https://api.github.com/repos/", name, "/tarball/HEAD")
+	utils::download.file(url, fgz, mode="wb", quiet = TRUE)
+	dzip <- tempfile()
+	utils::untar(fgz, exdir=dzip)
+	ff <- list.files(dzip, recursive=TRUE, full.names=TRUE)
+	relff <- list.files(dzip, recursive=TRUE)
+	rem <- strsplit(relff[1], "/")[[1]][1]
+	outf <- file.path(path, name, gsub(remove, "", relff))
+	outd <- unique(dirname(outf))
+	for (d in outd) dir.create(d, FALSE, TRUE)
+	exf <- list.files(path, recursive=TRUE, full.names=TRUE)
+	file.remove(exf)	
+	all(file.rename(ff, outf))
+}
+
+
 update_terms <- function(voc, quiet=FALSE, force=FALSE, local_terms=NULL) {
 	
-	pvoc <- vocal:::terms_path(voc)
+	pvoc <- terms_path(voc)
 	#dir.create(file.path(pvoc, "variables"), FALSE, TRUE)
 	#dir.create(file.path(pvoc, "values"), FALSE, TRUE)
 
@@ -81,29 +100,12 @@ update_terms <- function(voc, quiet=FALSE, force=FALSE, local_terms=NULL) {
 	git_updated <- FALSE
 	if (continue) {
 		message(paste("updating", voc, "to version", gsha)); utils::flush.console()
-		fzip = tempfile()
-		vocurl <- file.path("https://github.com/", voc, "archive/refs/heads/main.zip", fsep="/")
-		utils::download.file(vocurl, fzip, mode="wb", quiet = TRUE)
-		dzip <- tempfile()
-		unzip(fzip, exdir=dzip)
-	
-		ff <- list.files(dzip, recursive=TRUE, full.names=TRUE)
-		dd <- unique(dirname(ff))
-		dn <- nchar(dd)
-		dd <- dd[which.min(dn)]
-		dd <- paste0(basename(dd), "/")
-		
-		outf <- file.path(pvoc, sapply(strsplit(ff, dd), function(i) i[2]))
-		outd <- unique(dirname(outf))
-		for (d in outd) dir.create(d, FALSE, TRUE)
-		
-		exf <- list.files(pvoc, recursive=TRUE, full.names=TRUE)
-		file.remove(exf)
-		
-		file.copy(ff, outf)
-
-		writeLines(gsha, file.path(pvoc, "sha.txt"))	
-		git_updated <- TRUE
+		if (clone_github(voc, pvoc)) {
+			writeLines(gsha, file.path(pvoc, "sha.txt"))	
+			git_updated <- TRUE
+		} else {
+			message("update failed"); utils::flush.console()
+		}
 		#gv <- readLines("https://raw.githubusercontent.com/carob-data/terminag/main/version.txt", warn = FALSE)
 		#gv <- trimws(unlist(strsplit(gv[grep("version", gv)], "="))[2])
 		#f <- system.file("terms/version.txt", package="carobiner")

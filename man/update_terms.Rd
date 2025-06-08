@@ -16,7 +16,7 @@ update_terms(voc, quiet=FALSE, force = FALSE, local_terms = NULL)
 }
  
 \arguments{
-  \item{voc}{character. path to the github repo of the vocabulary. E.g. "reagro/terminag"}
+  \item{voc}{character. path to the github repo of the vocabulary. E.g. "carob-data/terminag"}
   \item{quiet}{logical. If \code{TRUE} a message is printed}
   \item{force}{logical}
   \item{local_terms}{character (path)}
