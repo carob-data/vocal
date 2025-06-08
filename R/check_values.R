@@ -150,7 +150,7 @@ check_caps <- function(x, vars, minchar=5, frac=0) {
 		}
 		i <- sum(toupper(m) == m)
 		if (i > (frac * length(m))) {
-			answ[nrow(answ)+1, ] <- c("all uppercase values", v)
+			answ[nrow(answ)+1, ] <- c("all uppercase", v)
 		}
 	}
 	answ
