@@ -2,7 +2,7 @@ Package: vocal
 Type: Package
 Title: Compliance checking
 Description: Tools to check if data is compliant with controlled vocabularies.
-Version: 0.2-0
+Version: 0.2-1
 Imports: geodata, terra, httr, jsonlite, rappdirs
 Date: 2025-06-07
 Encoding: UTF-8

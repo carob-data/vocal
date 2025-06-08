@@ -37,7 +37,7 @@ check_empty <- function(x, answ) {
 
 check_ranges <- function(x, trms, answ) {
 	nms <- colnames(x)
-	trms <- trms[na.omit(match(nms, trms$name)), ]
+	trms <- trms[stats::na.omit(match(nms, trms$name)), ]
 
 	
 	bad <- NULL
@@ -55,7 +55,7 @@ check_ranges <- function(x, trms, answ) {
 		}
 	}
 	if (!is.null(bad)) {
-		answ[nrow(answ)+1, ] <- c("bounds", paste("out of bounds:", paste(bad, collapse=", ")))
+		answ[nrow(answ)+1, ] <- c("out of bounds", paste(bad, collapse=", "))
 		bad <- NULL
 	}
 	
@@ -93,7 +93,7 @@ check_type_range <- function(x, trms, answ) {
 
 check_accepted <- function(x, trms, voc, answ) {
 	trms <- trms[which(trms$vocabulary != ""), ]
-	trms <- trms[na.omit(match(names(x), trms$name)), ]
+	trms <- trms[stats::na.omit(match(names(x), trms$name)), ]
 	if (nrow(trms) == 0) return(answ)
 	
 	for (i in 1:nrow(trms)) {
