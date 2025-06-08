@@ -29,7 +29,7 @@ check_empty <- function(x, answ) {
 	}
 	if (any(bad2)) {
 		b <- paste0(colnames(x)[bad2], collapse= ", ")
-		answ[nrow(answ)+1, ] <- c("non-trimmed character values", b)
+		answ[nrow(answ)+1, ] <- c("untrimmed characters", b)
 	}
 	answ
 }

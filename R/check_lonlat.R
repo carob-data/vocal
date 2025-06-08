@@ -21,16 +21,14 @@ check_lonlat <- function(x) {
 	if (any(i)) {
 		u <- unique(e$country[i])
 		bad <- paste(u, collapse=", ")
-		answ[nrow(answ)+1, ] <- c("not on land",
-				paste0("coordinates not on land for: ", bad))
+		answ[nrow(answ)+1, ] <- c("coordinates not on land", bad)
 	} 
 	e <- unique(stats::na.omit(e))
 	i <- e$NAME_0 != e$country
 	if (any(i)) {
 		u <- apply(e[i, ,drop=FALSE], 1, paste, collapse="/")
 		bad <- paste(u, collapse=", ")
-		answ[nrow(answ)+1, ] <- c("wrong country",
-				paste0("coordinates/country conflict: ", bad))
+		answ[nrow(answ)+1, ] <- c("coordinates in wrong country", bad)
 	}
 	
 	locvars <- c("country", paste0("adm", 1:5), "location", "site", "longitude", "latitude")
