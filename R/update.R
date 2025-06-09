@@ -69,7 +69,7 @@ clone_github <- function(name, path) {
 	ff <- list.files(dzip, recursive=TRUE, full.names=TRUE)
 	relff <- list.files(dzip, recursive=TRUE)
 	rem <- strsplit(relff[1], "/")[[1]][1]
-	outf <- file.path(path, name, gsub(remove, "", relff))
+	outf <- file.path(path, name, gsub(rem, "", relff))
 	outd <- unique(dirname(outf))
 	for (d in outd) dir.create(d, FALSE, TRUE)
 	exf <- list.files(path, recursive=TRUE, full.names=TRUE)
@@ -100,7 +100,7 @@ update_terms <- function(voc, quiet=FALSE, force=FALSE, local_terms=NULL) {
 	git_updated <- FALSE
 	if (continue) {
 		message(paste("updating", voc, "to version", gsha)); utils::flush.console()
-		if (clone_github(voc, pvoc)) {
+		if (clone_github(voc, terms_path(""))) {
 			writeLines(gsha, file.path(pvoc, "sha.txt"))	
 			git_updated <- TRUE
 		} else {
