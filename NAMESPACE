@@ -2,7 +2,8 @@ importFrom(terra, extract, crs)
 importFrom(geodata, world)
 
 export(
-accepted_variables, accepted_values, update_terms,
+set_vocabulary,get_vocabulary,check_vocabulary,
+accepted_variables, accepted_values,
 check_variables, check_values,
 check_date, check_datespan, check_span, 
 check_lonlat, check_caps

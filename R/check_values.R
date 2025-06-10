@@ -91,13 +91,14 @@ check_type_range <- function(x, trms, answ) {
 	check_ranges(x, trs, answ)
 }
 
-check_accepted <- function(x, trms, voc, answ) {
+check_accepted <- function(x, trms, answ) {
+
 	trms <- trms[which(trms$vocabulary != ""), ]
 	trms <- trms[stats::na.omit(match(names(x), trms$name)), ]
 	if (nrow(trms) == 0) return(answ)
 	
 	for (i in 1:nrow(trms)) {
-		accepted <- vocal::accepted_values(trms$vocabulary[i], voc=voc)[,1]
+		accepted <- accepted_values(trms$vocabulary[i])[,1]
 		provided <- unique(x[, trms$name[i]])
 		if (trms$required[i] != "yes") {
 			provided <- stats::na.omit(provided)
@@ -106,13 +107,13 @@ check_accepted <- function(x, trms, voc, answ) {
 			if (!is.null(trms$multiple_allowed)) {
 				if (trms$multiple_allowed[i] == "yes") {
 					if (!is.na(provided[1])) {
-						provided <- unique(unlist(strsplit(provided, ";|; ")))
+						provided <- unique(unlist(strsplit(as.character(provided), ";|; ")))
 					}
 				}
 			}
 			if (trms$vocabulary[i] == "crop") {
 				if (any(grepl("_", provided))) {
-					provided <- unique(unlist(strsplit(provided, "_")))
+					provided <- unique(unlist(strsplit(as.character(provided), "_")))
 				}
 			}
 			if (trms$NAok[i]=="yes") {
@@ -132,11 +133,11 @@ check_accepted <- function(x, trms, voc, answ) {
 }
 
 
-check_values <- function(x, trms, voc="carob-data/terminag") {
+check_values <- function(x, trms) {
 	answ <- check_missingvalues(x, trms)
 	answ <- check_empty(x, answ)
 	answ <- check_type_range(x, trms, answ)
-	check_accepted(x, trms, voc, answ)
+	check_accepted(x, trms, answ)
 }
 
 
