@@ -1,5 +1,6 @@
 
 
+
 get_variables <- function(group, path) {
 	f <- file.path(path, "variables", paste0("variables_", group, ".csv"))		
 	if (file.exists(f)) {
@@ -9,6 +10,7 @@ get_variables <- function(group, path) {
 		NULL
 	}
 }
+
 
 get_variable_group_names <- function(path) {
 	gsub("^variables_|\\.csv$", "", list.files(file.path(path, "variables"), pattern="variables_.*.\\.csv$"))

@@ -3,7 +3,12 @@
 
 
 vocabulary_path <- function(voc) {
-	file.path(rappdirs::user_data_dir(), ".vocal", voc)
+	if (grepl("^github:", voc)) {
+		voc <- gsub("^github:", "", voc)
+		file.path(rappdirs::user_data_dir(), ".vocal", voc)
+	} else {
+		voc
+	}
 }
 
 
@@ -18,13 +23,57 @@ set_vocabulary <- function(voc) {
 get_vocabulary <- function() {
 	voc <- .vocal_environment$voc
 	if (is.null(voc)) {
-		voc <- "carob-data/terminag"
+		voc <- "github:carob-data/terminag"
 		set_vocabulary(voc)
 		warning("No vocabulary. Setting it to 'carob-data/terminag'", call. = FALSE)
 	}
 	voc
 }
 
+
+
+read_vocabulary <- function() {
+	read_one <- function(voc) {
+		p <- vocabulary_path(voc)
+
+		ff <- list.files(file.path(p, "variables"), pattern=paste0("^variables_.*\\.csv$"), full.names=TRUE)
+		gg <- gsub("^variables_|\\.csv$", "", basename(ff))
+		v <- lapply(1:length(ff), \(i) data.frame(group=gg[i], utils::read.csv(ff[i])))
+		v <- do.call(rbind, v)
+		
+		ff <- list.files(file.path(p, "values"), pattern=paste0("^values_.*\\.csv$"), full.names=TRUE)
+		values <- lapply(ff, utils::read.csv)
+		names(values) <- gsub("^values_|\\.csv$", "", basename(ff))
+		
+		list(variables=v, values=values)
+	}
+	vocs <- get_vocabulary()
+	if (length(vocs) == 1) {
+		return(read_one(vocs))
+	}
+	v <- lapply(vocs, read_one)
+	out <- v[[1]]
+	for (i in 2:length(v)) {
+		if (!is.null(v[[i]]$variables)) {
+			out$variables <- rbind(out$variables, v[[i]]$variables)
+		}
+		vnm <- names(v[[i]]$values)
+		if (length(vnm) < 1) next
+		outnm <- names(out$values)
+		k <- vnm %in% outnm
+		if (any(k)) {
+			for (j in 1:which(k)) {
+				h <- match(outnm, vnm[j])
+				out$values[[h]] <- rbind(out$values[[h]], v[[i]]$values[[j]])
+			}
+		}
+		if (any(!k)) {
+			h <- match(outnm, vnm[j])
+			out$values <- c(out$values, v[[i]]$values[!k])
+		}
+	}
+	out
+}
 
 
 clone_github <- function(name, path) {
@@ -61,12 +110,15 @@ is_up2date <- function(gsha) {
 
 check_vocabulary <- function(update=TRUE, force=FALSE, quiet=TRUE) {
 
+	voc <- get_vocabulary()
+	if (!grepl("^github:", voc)) return(TRUE)
+	
 	if ((!force) && isTRUE(.vocal_environment$voc_checked)) {
 		return(TRUE)
 	}
 	
-	voc <- get_vocabulary()
-	burl <- file.path("https://api.github.com/repos", voc)
+	gvoc <- gsub("^github:", "", voc)
+	burl <- file.path("https://api.github.com/repos", gvoc)
 	# use GET instead to make sure it exists
 	v <- readLines(file.path(burl, "commits/main"))
 	gsha <- jsonlite::fromJSON(v)$sha
