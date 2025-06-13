@@ -1,10 +1,10 @@
 Package: vocal
 Type: Package
 Title: Compliance checking
-Description: Tools to check if data is compliant with controlled vocabularies.
-Version: 0.3-0
+Description: Tools to check if data is compliant with a controlled vocabulary.
+Version: 0.3-1
 Imports: geodata, terra, httr, jsonlite, rappdirs
-Date: 2025-06-12
+Date: 2025-06-13
 Encoding: UTF-8
 Authors@R: c(
 	person("Robert J.", "Hijmans", role = c("cre", "aut"),  email = "r.hijmans@gmail.com")

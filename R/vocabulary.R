@@ -2,11 +2,23 @@
 .vocal_environment <- new.env(parent=emptyenv())
 
 
+#setClass("Vocabulary",
+#	representation (
+#		name = "character",
+#		checked = "logical",
+#		read = "logical",
+#		voc = "list"
+#	)	is.valid(object)
+#)
+
+
+
 vocabulary_path <- function(voc) {
 	if (grepl("^github:", voc)) {
 		voc <- gsub("^github:", "", voc)
 		file.path(rappdirs::user_data_dir(), ".vocal", voc)
-	} else {
+	} else { 
+		# local
 		voc
 	}
 }
@@ -21,10 +33,10 @@ valid_vocabulary <- function() {
 	TRUE
 }
 
-set_vocabulary <- function(voc) {
-	oldvoc <- .vocal_environment$name
-	if (!isTRUE(identical(voc, oldvoc))) {
-		.vocal_environment$name <- voc
+set_vocabulary <- function(name) {
+	oldname <- .vocal_environment$name
+	if (!isTRUE(identical(name, oldname))) {
+		.vocal_environment$name <- name
 		.vocal_environment$checked <- FALSE
 		.vocal_environment$read <- FALSE
 		check_vocabulary()
@@ -39,9 +51,7 @@ set_vocabulary <- function(voc) {
 get_vocabulary <- function() {
 	voc <- .vocal_environment$name
 	if (is.null(voc)) {
-		voc <- "github:carob-data/terminag"
-		set_vocabulary(voc)
-		warning("No vocabulary. Setting it to 'github:carob-data/terminag'", call. = FALSE)
+		error("No vocabulary has been set", call. = FALSE)
 	}
 	voc
 }
@@ -54,6 +64,14 @@ read_one_voc <- function(voc) {
 	ff <- list.files(file.path(p, "variables"), pattern=paste0("^variables_.*\\.csv$"), full.names=TRUE)
 	gg <- gsub("^variables_|\\.csv$", "", basename(ff))
 	v <- lapply(1:length(ff), \(i) data.frame(group=gg[i], utils::read.csv(ff[i])))
+	reqnames <- c("name", "type", "required", "vocabulary", "multiple_allowed", "valid_min", "valid_max", "NAok")
+	test <- sapply(v, \(i) reqnames %in% names(i))
+	if (!(all(test))) {
+		bad <- names(v)[!test]
+		stop(paste("incomplete variable files", paste(bad, collapse=", ")))
+	}
+	
+
 	v <- do.call(rbind, v)
 		
 	ff <- list.files(file.path(p, "values"), pattern=paste0("^values_.*\\.csv$"), full.names=TRUE)
