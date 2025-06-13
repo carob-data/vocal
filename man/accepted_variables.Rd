@@ -23,7 +23,7 @@ data.frame
 }
 
 \examples{
-set_vocabulary("carob-data/terminag")
+set_vocabulary("github:carob-data/terminag")
 v <- accepted_variables("crop")
 head(v)
 }

@@ -3,12 +3,12 @@
 
 
 vocabulary_path <- function(voc) {
-	if (grepl("^github:", voc)) {
+#	if (grepl("^github:", voc)) {
 		voc <- gsub("^github:", "", voc)
 		file.path(rappdirs::user_data_dir(), ".vocal", voc)
-	} else {
-		voc
-	}
+#	} else {
+#		voc
+#	}
 }
 
 
@@ -17,6 +17,7 @@ set_vocabulary <- function(voc) {
 	if (!isTRUE(identical(voc, oldvoc))) {
 		.vocal_environment$voc <- voc
 		.vocal_environment$voc_checked <- FALSE
+		check_vocabulary()
 	}
 }
 
@@ -25,7 +26,7 @@ get_vocabulary <- function() {
 	if (is.null(voc)) {
 		voc <- "github:carob-data/terminag"
 		set_vocabulary(voc)
-		warning("No vocabulary. Setting it to 'carob-data/terminag'", call. = FALSE)
+		warning("No vocabulary. Setting it to 'github:carob-data/terminag'", call. = FALSE)
 	}
 	voc
 }
@@ -34,7 +35,8 @@ get_vocabulary <- function() {
 
 read_vocabulary <- function() {
 	read_one <- function(voc) {
-		p <- vocabulary_path(voc)
+		
+		p <- ifelse(grepl("github:", voc), vocabulary_path(voc), voc)
 
 		ff <- list.files(file.path(p, "variables"), pattern=paste0("^variables_.*\\.csv$"), full.names=TRUE)
 		gg <- gsub("^variables_|\\.csv$", "", basename(ff))
@@ -96,6 +98,10 @@ clone_github <- function(name, path) {
 
 is_up2date <- function(gsha) {
 	voc <- get_vocabulary()
+	if (!grepl("github:", voc)) {
+		return(TRUE)
+	}
+
 	pvoc <- vocabulary_path(voc)
 	f <- file.path(pvoc, "sha.txt")
 	if (file.exists(f)) {
@@ -108,48 +114,64 @@ is_up2date <- function(gsha) {
 }
 
 
+
+
 check_vocabulary <- function(update=TRUE, force=FALSE, quiet=TRUE) {
 
-	voc <- get_vocabulary()
-	if (!grepl("^github:", voc)) return(TRUE)
-	
+	check_one_vocabulary <- function(gvoc, update, force, quiet) {
+			
+		voc <- gsub("^github:", "", gvoc)
+		pth <- vocabulary_path(gvoc)
+		
+		burl <- file.path("https://api.github.com/repos", voc)
+		# use GET instead to make sure it exists
+		v <- readLines(file.path(burl, "commits/main"))
+		gsha <- jsonlite::fromJSON(v)$sha
+		
+		up2d <- is_up2date(gsha)
+		if (up2d) {
+			if (!quiet) message("vocabulary is up-to-date")
+			return(TRUE)
+		}
+		if (!update) {
+			if (!quiet) message("the vocabulary is not up-to-date")
+			return(FALSE)	
+		}
+		if (!quiet) message("checking for updated vocabulary")
+		if (!quiet) message(paste("updating", voc, "to version", gsha)); utils::flush.console()
+		if (clone_github(voc, vocabulary_path(""))) {
+			writeLines(gsha, file.path(pth, "sha.txt"))	
+			result <- TRUE
+		} else {
+			if (!quiet) message("update failed"); utils::flush.console()
+			result <- FALSE
+		}
+		result
+	}
+
+
 	if ((!force) && isTRUE(.vocal_environment$voc_checked)) {
 		return(TRUE)
 	}
-	
-	gvoc <- gsub("^github:", "", voc)
-	burl <- file.path("https://api.github.com/repos", gvoc)
-	# use GET instead to make sure it exists
-	v <- readLines(file.path(burl, "commits/main"))
-	gsha <- jsonlite::fromJSON(v)$sha
-	
-	up2d <- is_up2date(gsha)
-	if (up2d) {
-		if (!quiet) message("vocabulary is up-to-date")
-		.vocal_environment$voc_checked <- TRUE
-		return(TRUE)
+	voc <- get_vocabulary()
+	out <- rep(FALSE, length(voc))
+	for (i in 1:length(voc)) {
+		if (!grepl("^github:", voc[i])) {
+			out[i] <- TRUE
+		} else {
+			out[i] <- check_one_vocabulary(voc[i], update=update, force=force, quiet=quiet)
+		}
 	}
-	if (!update) {
-		if (!quiet) message("the vocabulary is not up-to-date")
-		return(FALSE)	
-	}
-	if (!quiet) message("checking for updated vocabulary")
-	if (!quiet) message(paste("updating", voc, "to version", gsha)); utils::flush.console()
-	if (clone_github(voc, vocabulary_path(""))) {
-		writeLines(gsha, file.path(vocabulary_path(voc), "sha.txt"))	
+	if (all(out)) {
 		.vocal_environment$voc_checked <- TRUE
-		result <- TRUE
+		TRUE
 	} else {
-		if (!quiet) message("update failed"); utils::flush.console()
-		result <- FALSE
+		FALSE
 	}
-	result
 }
 
 
-
-
-add_local <- function(voc, local_terms=NULL) {
+obsolete_add_local <- function(voc, local_terms=NULL) {
  
 	if (is.null(local_terms)) return()
 	

@@ -19,7 +19,7 @@ get_variable_group_names <- function(path) {
 
 accepted_variables <- function(include=NULL) {
 	voc <- get_vocabulary()
-	p <- vocabulary_path(voc)
+	p <- ifelse(grepl("github:", voc), vocabulary_path(voc), voc)
 	if (is.null(include)) {
 		include <- get_variable_group_names(p)
 		include <- gsub("variables_|\\.csv$", "", include)
@@ -31,7 +31,9 @@ accepted_variables <- function(include=NULL) {
 
 
 accepted_values <- function(name) {
-	p <- vocabulary_path(get_vocabulary())
+
+	voc <- get_vocabulary()
+	p <- ifelse(grepl("github:", voc), vocabulary_path(voc), voc)
 	f <- file.path(p, "values", paste0("values_", name, ".csv"))
 	if (file.exists(f)) {
 		utils::read.csv(f)

@@ -20,7 +20,7 @@ check_vocabulary(update=TRUE, force=FALSE, quiet=TRUE)
 }
  
 \arguments{
-  \item{voc}{character. A vocabulary name such as "carob-data/terminag"}
+  \item{voc}{character. A vocabulary name such as "github:carob-data/terminag"}
   \item{update}{logical. Shoud the vocabulary be updated if it out-of-date?}
   \item{force}{logical. If \code{FALSE} only one check is done per session}
   \item{quiet}{logical. If \code{TRUE} messages are not printed}
@@ -31,7 +31,7 @@ character
 }
 
 \examples{
-set_vocabulary("carob-data/terminag")
+set_vocabulary("github:carob-data/terminag")
 get_vocabulary()
 
 check_vocabulary(update=FALSE)
