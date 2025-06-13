@@ -1,7 +1,28 @@
 
 
+accepted_variables <- function(include=NULL) {
+	if (!isTRUE(.vocal_environment$read)) {
+		stop("no vocabulary data")
+	}
+	v <- .vocal_environment$voc$variables
+	if (is.null(include)) {
+		v
+	} else {
+		v[v$group %in% include, ]
+	}
+}
 
-get_variables <- function(group, path) {
+accepted_values <- function(name) {
+	if (!isTRUE(.vocal_environment$read)) {
+		stop("no vocabulary data")
+	}
+	.vocal_environment$voc$values[[name]]
+}
+
+
+
+
+.get_variables <- function(group, path) {
 	f <- file.path(path, "variables", paste0("variables_", group, ".csv"))		
 	if (file.exists(f)) {
 		data.frame(group=group, utils::read.csv(f)	)
@@ -12,12 +33,13 @@ get_variables <- function(group, path) {
 }
 
 
-get_variable_group_names <- function(path) {
+.get_variable_group_names <- function(path) {
 	gsub("^variables_|\\.csv$", "", list.files(file.path(path, "variables"), pattern="variables_.*.\\.csv$"))
 }
 
 
-accepted_variables <- function(include=NULL) {
+
+.old.accepted_variables <- function(include=NULL) {
 	voc <- get_vocabulary()
 	p <- ifelse(grepl("github:", voc), vocabulary_path(voc), voc)
 	p <- vocabulary_path(voc)
@@ -30,8 +52,7 @@ accepted_variables <- function(include=NULL) {
 }
 
 
-
-accepted_values <- function(name) {
+.old.accepted_values <- function(name) {
 
 	voc <- get_vocabulary()
 	p <- ifelse(grepl("github:", voc), vocabulary_path(voc), voc)

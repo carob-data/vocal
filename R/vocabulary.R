@@ -22,16 +22,22 @@ valid_vocabulary <- function() {
 }
 
 set_vocabulary <- function(voc) {
-	oldvoc <- .vocal_environment$voc
+	oldvoc <- .vocal_environment$name
 	if (!isTRUE(identical(voc, oldvoc))) {
-		.vocal_environment$voc <- voc
-		.vocal_environment$voc_checked <- FALSE
-		exists_vocabulary()
+		.vocal_environment$name <- voc
+		.vocal_environment$checked <- FALSE
+		.vocal_environment$read <- FALSE
+		check_vocabulary()
+		d <- try(read_vocabulary())
+		if (!inherits(d, "try-error")) {
+			.vocal_environment$voc <- d
+			.vocal_environment$read <- TRUE
+		}
 	}
 }
 
 get_vocabulary <- function() {
-	voc <- .vocal_environment$voc
+	voc <- .vocal_environment$name
 	if (is.null(voc)) {
 		voc <- "github:carob-data/terminag"
 		set_vocabulary(voc)
@@ -134,7 +140,11 @@ check_one_vocabulary <- function(gvoc, update, force, quiet) {
 		v <- readLines(file.path(burl, "commits/main"))
 		gsha <- jsonlite::fromJSON(v)$sha
 		
-		up2d <- is_up2date(gsha, gvoc)
+		up2d <- try(is_up2date(gsha, gvoc))
+		if (inherits(up2d, "try-error")) {
+			if (!quiet) message("cannot update vocabulary")
+			return(FALSE)		
+		}
 		if (up2d) {
 			if (!quiet) message("vocabulary is up-to-date")
 			return(TRUE)
@@ -145,7 +155,8 @@ check_one_vocabulary <- function(gvoc, update, force, quiet) {
 		}
 		if (!quiet) message("checking for updated vocabulary")
 		if (!quiet) message(paste("updating", voc, "to version", gsha)); utils::flush.console()
-		if (clone_github(voc, vocabulary_path("github:"))) {
+		updated <- try(clone_github(voc, vocabulary_path("github:")))
+		if (isTRUE(updated)) {
 			writeLines(gsha, file.path(pth, "sha.txt"))	
 			result <- TRUE
 		} else {
@@ -158,7 +169,7 @@ check_one_vocabulary <- function(gvoc, update, force, quiet) {
 
 check_vocabulary <- function(update=TRUE, force=FALSE, quiet=FALSE) {
 
-	if ((!force) && isTRUE(.vocal_environment$voc_checked)) {
+	if ((!force) && isTRUE(.vocal_environment$checked)) {
 		return(TRUE)
 	}
 	voc <- get_vocabulary()
@@ -167,7 +178,7 @@ check_vocabulary <- function(update=TRUE, force=FALSE, quiet=FALSE) {
 		out[i] <- check_one_vocabulary(voc[i], update=update, force=force, quiet=quiet)
 	}
 	if (all(out)) {
-		.vocal_environment$voc_checked <- TRUE
+		.vocal_environment$checked <- TRUE
 		TRUE
 	} else {
 		FALSE
