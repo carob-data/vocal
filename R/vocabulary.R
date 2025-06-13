@@ -3,21 +3,30 @@
 
 
 vocabulary_path <- function(voc) {
-#	if (grepl("^github:", voc)) {
+	if (grepl("^github:", voc)) {
 		voc <- gsub("^github:", "", voc)
 		file.path(rappdirs::user_data_dir(), ".vocal", voc)
-#	} else {
-#		voc
-#	}
+	} else {
+		voc
+	}
 }
 
+
+exists_vocabulary <- function() {
+	TRUE
+}
+
+
+valid_vocabulary <- function() {
+	TRUE
+}
 
 set_vocabulary <- function(voc) {
 	oldvoc <- .vocal_environment$voc
 	if (!isTRUE(identical(voc, oldvoc))) {
 		.vocal_environment$voc <- voc
 		.vocal_environment$voc_checked <- FALSE
-		check_vocabulary()
+		exists_vocabulary()
 	}
 }
 
@@ -32,45 +41,45 @@ get_vocabulary <- function() {
 }
 
 
+read_one_voc <- function(voc) {
+		
+	p <- ifelse(grepl("github:", voc), vocabulary_path(voc), voc)
+
+	ff <- list.files(file.path(p, "variables"), pattern=paste0("^variables_.*\\.csv$"), full.names=TRUE)
+	gg <- gsub("^variables_|\\.csv$", "", basename(ff))
+	v <- lapply(1:length(ff), \(i) data.frame(group=gg[i], utils::read.csv(ff[i])))
+	v <- do.call(rbind, v)
+		
+	ff <- list.files(file.path(p, "values"), pattern=paste0("^values_.*\\.csv$"), full.names=TRUE)
+	values <- lapply(ff, utils::read.csv)
+	names(values) <- gsub("^values_|\\.csv$", "", basename(ff))
+	
+	list(variables=v, values=values)
+}
+
 
 read_vocabulary <- function() {
-	read_one <- function(voc) {
-		
-		p <- ifelse(grepl("github:", voc), vocabulary_path(voc), voc)
-
-		ff <- list.files(file.path(p, "variables"), pattern=paste0("^variables_.*\\.csv$"), full.names=TRUE)
-		gg <- gsub("^variables_|\\.csv$", "", basename(ff))
-		v <- lapply(1:length(ff), \(i) data.frame(group=gg[i], utils::read.csv(ff[i])))
-		v <- do.call(rbind, v)
-		
-		ff <- list.files(file.path(p, "values"), pattern=paste0("^values_.*\\.csv$"), full.names=TRUE)
-		values <- lapply(ff, utils::read.csv)
-		names(values) <- gsub("^values_|\\.csv$", "", basename(ff))
-		
-		list(variables=v, values=values)
-	}
 	vocs <- get_vocabulary()
 	if (length(vocs) == 1) {
-		return(read_one(vocs))
+		return(read_one_voc(vocs))
 	}
-	v <- lapply(vocs, read_one)
+	v <- lapply(vocs, read_one_voc)
 	out <- v[[1]]
 	for (i in 2:length(v)) {
 		if (!is.null(v[[i]]$variables)) {
-			out$variables <- rbind(out$variables, v[[i]]$variables)
+			out$variables <- dplyr::bind_rows(out$variables, v[[i]]$variables)
 		}
 		vnm <- names(v[[i]]$values)
 		if (length(vnm) < 1) next
 		outnm <- names(out$values)
 		k <- vnm %in% outnm
 		if (any(k)) {
-			for (j in 1:which(k)) {
-				h <- match(outnm, vnm[j])
-				out$values[[h]] <- rbind(out$values[[h]], v[[i]]$values[[j]])
+			for (j in which(k)) {
+				h <- match(vnm[j], outnm)
+				out$values[[h]] <- dplyr::bind_rows(out$values[[h]], v[[i]]$values[[j]])
 			}
 		}
 		if (any(!k)) {
-			h <- match(outnm, vnm[j])
 			out$values <- c(out$values, v[[i]]$values[!k])
 		}
 	}
@@ -96,13 +105,8 @@ clone_github <- function(name, path) {
 }
 
 
-is_up2date <- function(gsha) {
-	voc <- get_vocabulary()
-	if (!grepl("github:", voc)) {
-		return(TRUE)
-	}
-
-	pvoc <- vocabulary_path(voc)
+is_up2date <- function(gsha, gvoc) {
+	pvoc <- vocal:::vocabulary_path(gvoc)
 	f <- file.path(pvoc, "sha.txt")
 	if (file.exists(f)) {
 		rsha <- readLines(f)
@@ -116,19 +120,21 @@ is_up2date <- function(gsha) {
 
 
 
-check_vocabulary <- function(update=TRUE, force=FALSE, quiet=TRUE) {
+check_one_vocabulary <- function(gvoc, update, force, quiet) {
 
-	check_one_vocabulary <- function(gvoc, update, force, quiet) {
-			
+		if (!grepl("^github:", gvoc)) {
+			return( TRUE)
+		} 
+
 		voc <- gsub("^github:", "", gvoc)
-		pth <- vocabulary_path(gvoc)
+		pth <- vocal:::vocabulary_path(gvoc)
 		
 		burl <- file.path("https://api.github.com/repos", voc)
 		# use GET instead to make sure it exists
 		v <- readLines(file.path(burl, "commits/main"))
 		gsha <- jsonlite::fromJSON(v)$sha
 		
-		up2d <- is_up2date(gsha)
+		up2d <- is_up2date(gsha, gvoc)
 		if (up2d) {
 			if (!quiet) message("vocabulary is up-to-date")
 			return(TRUE)
@@ -139,7 +145,7 @@ check_vocabulary <- function(update=TRUE, force=FALSE, quiet=TRUE) {
 		}
 		if (!quiet) message("checking for updated vocabulary")
 		if (!quiet) message(paste("updating", voc, "to version", gsha)); utils::flush.console()
-		if (clone_github(voc, vocabulary_path(""))) {
+		if (clone_github(voc, vocabulary_path("github:"))) {
 			writeLines(gsha, file.path(pth, "sha.txt"))	
 			result <- TRUE
 		} else {
@@ -147,8 +153,10 @@ check_vocabulary <- function(update=TRUE, force=FALSE, quiet=TRUE) {
 			result <- FALSE
 		}
 		result
-	}
+}
 
+
+check_vocabulary <- function(update=TRUE, force=FALSE, quiet=FALSE) {
 
 	if ((!force) && isTRUE(.vocal_environment$voc_checked)) {
 		return(TRUE)
@@ -156,11 +164,7 @@ check_vocabulary <- function(update=TRUE, force=FALSE, quiet=TRUE) {
 	voc <- get_vocabulary()
 	out <- rep(FALSE, length(voc))
 	for (i in 1:length(voc)) {
-		if (!grepl("^github:", voc[i])) {
-			out[i] <- TRUE
-		} else {
-			out[i] <- check_one_vocabulary(voc[i], update=update, force=force, quiet=quiet)
-		}
+		out[i] <- check_one_vocabulary(voc[i], update=update, force=force, quiet=quiet)
 	}
 	if (all(out)) {
 		.vocal_environment$voc_checked <- TRUE

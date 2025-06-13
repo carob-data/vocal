@@ -38,7 +38,7 @@ check_empty <- function(x, answ) {
 check_ranges <- function(x, trms, answ) {
 	nms <- colnames(x)
 	trms <- trms[stats::na.omit(match(nms, trms$name)), ]
-
+	trms <- trms[trms$type == "numeric",]
 	
 	bad <- NULL
 	trms <- stats::na.omit(trms[, c("name", "valid_min", "valid_max"), ])
@@ -70,6 +70,9 @@ check_ranges <- function(x, trms, answ) {
 
 
 check_type_range <- function(x, trms, answ) {
+	nms <- colnames(x)
+	i <- match(nms, trms$name)
+	x <- x[, !is.na(i)]
 	nms <- colnames(x)
 	trs <- trms[match(nms, trms$name), ]
 	cls <- sapply(x, class)

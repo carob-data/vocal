@@ -20,6 +20,7 @@ get_variable_group_names <- function(path) {
 accepted_variables <- function(include=NULL) {
 	voc <- get_vocabulary()
 	p <- ifelse(grepl("github:", voc), vocabulary_path(voc), voc)
+	p <- vocabulary_path(voc)
 	if (is.null(include)) {
 		include <- get_variable_group_names(p)
 		include <- gsub("variables_|\\.csv$", "", include)
