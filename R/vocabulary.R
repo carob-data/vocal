@@ -33,13 +33,13 @@ valid_vocabulary <- function() {
 	TRUE
 }
 
-set_vocabulary <- function(name) {
+set_vocabulary <- function(name, update=TRUE, force=FALSE, quiet=FALSE) {
 	oldname <- .vocal_environment$name
 	if (!isTRUE(identical(name, oldname))) {
 		.vocal_environment$name <- name
 		.vocal_environment$checked <- FALSE
 		.vocal_environment$read <- FALSE
-		check_vocabulary()
+		check_installed()
 		d <- try(read_vocabulary())
 		if (!inherits(d, "try-error")) {
 			.vocal_environment$voc <- d
@@ -57,6 +57,14 @@ get_vocabulary <- function() {
 }
 
 
+has_names <- function(v, req) {
+	test <- sapply(v, \(i) req %in% names(i))
+	if (!(all(test))) {
+		bad <- names(v)[!test]
+		stop(paste("incomplete variables files", paste(bad, collapse=", ")))
+	}
+}
+
 read_one_voc <- function(voc) {
 		
 	p <- ifelse(grepl("github:", voc), vocabulary_path(voc), voc)
@@ -64,31 +72,32 @@ read_one_voc <- function(voc) {
 	ff <- list.files(file.path(p, "variables"), pattern=paste0("^variables_.*\\.csv$"), full.names=TRUE)
 	gg <- gsub("^variables_|\\.csv$", "", basename(ff))
 	v <- lapply(1:length(ff), \(i) data.frame(group=gg[i], utils::read.csv(ff[i])))
-	reqnames <- c("name", "type", "required", "vocabulary", "multiple_allowed", "valid_min", "valid_max", "NAok")
-	test <- sapply(v, \(i) reqnames %in% names(i))
-	if (!(all(test))) {
-		bad <- names(v)[!test]
-		stop(paste("incomplete variable files", paste(bad, collapse=", ")))
+	if (length(ff) > 0) {
+		reqs <- c("name", "type", "required", "vocabulary", "multiple_allowed", "valid_min", "valid_max", "NAok")
+		has_names(v, reqs)
 	}
-	
+	v <- do.call(dplyr::bind_rows, v)
 
-	v <- do.call(rbind, v)
-		
 	ff <- list.files(file.path(p, "values"), pattern=paste0("^values_.*\\.csv$"), full.names=TRUE)
 	values <- lapply(ff, utils::read.csv)
 	names(values) <- gsub("^values_|\\.csv$", "", basename(ff))
-	
+	if (length(ff) > 0) {
+		reqs <- c("name")
+		has_names(values, reqs)
+	}
 	list(variables=v, values=values)
 }
 
 
 read_vocabulary <- function() {
+
 	vocs <- get_vocabulary()
 	if (length(vocs) == 1) {
 		return(read_one_voc(vocs))
 	}
 	v <- lapply(vocs, read_one_voc)
 	out <- v[[1]]
+	
 	for (i in 2:length(v)) {
 		if (!is.null(v[[i]]$variables)) {
 			out$variables <- dplyr::bind_rows(out$variables, v[[i]]$variables)
@@ -142,21 +151,59 @@ is_up2date <- function(gsha, gvoc) {
 }
 
 
+github_sha <- function(voc) {
+	burl <- file.path("https://api.github.com/repos", voc)
+	# use GET instead to make sure it exists
+	# and to exit if no internet
+	v <- try(readLines(file.path(burl, "commits/main")))
+	if (inherits(v, "try-error")) {
+		return(NA)
+	}
+	jsonlite::fromJSON(v)$sha
+}
+
+
+check_installed <- function() {
+	voc <- get_vocabulary()
+	if (length(voc) < 1) return(NA)
+	out <- rep(NA, length(voc))
+	for (i in 1:length(voc)) {
+		if (!grepl("^github:", voc[i])) {
+			out[i] <- TRUE
+			next
+		}
+		pvoc <- vocabulary_path(voc[i])
+		f <- file.path(pvoc, "sha.txt")
+		if (!file.exists(f)) {
+			message(paste("installing", voc[i])); flush.console()
+			p <- vocabulary_path("github:")
+			v <- gsub("^github:", "", voc[i])
+			gsha <- github_sha(v)
+			updated <- try(clone_github(v, p))
+			if (isTRUE(updated)) {
+				writeLines(gsha, file.path(pvoc, "sha.txt"))				
+				out[i] <- TRUE
+			}
+		} else {
+			out[i] <- TRUE		
+		}
+	}
+	out
+}
+
 
 
 check_one_vocabulary <- function(gvoc, update, force, quiet) {
 
 		if (!grepl("^github:", gvoc)) {
-			return( TRUE)
+			return(TRUE)
 		} 
 
 		voc <- gsub("^github:", "", gvoc)
 		pth <- vocabulary_path(gvoc)
 		
-		burl <- file.path("https://api.github.com/repos", voc)
-		# use GET instead to make sure it exists
-		v <- readLines(file.path(burl, "commits/main"))
-		gsha <- jsonlite::fromJSON(v)$sha
+		gsha <- github_sha(voc)
+		if (is.na(gsha)) return(FALSE)
 		
 		up2d <- try(is_up2date(gsha, gvoc))
 		if (inherits(up2d, "try-error")) {
@@ -195,12 +242,12 @@ check_vocabulary <- function(update=TRUE, force=FALSE, quiet=FALSE) {
 	for (i in 1:length(voc)) {
 		out[i] <- check_one_vocabulary(voc[i], update=update, force=force, quiet=quiet)
 	}
-	if (all(out)) {
-		.vocal_environment$checked <- TRUE
-		TRUE
-	} else {
+	if (!all(out)) {
+		warning(paste("could not check for update:", paste(voc[!all], collapse="; ")))
 		FALSE
 	}
+	.vocal_environment$checked <- TRUE
+	TRUE
 }
 
 
