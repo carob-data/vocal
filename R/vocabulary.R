@@ -181,7 +181,8 @@ check_installed <- function() {
 			gsha <- github_sha(v)
 			updated <- try(clone_github(v, p))
 			if (isTRUE(updated)) {
-				writeLines(gsha, file.path(pvoc, "sha.txt"))				
+				writeLines(gsha, file.path(pvoc, "sha.txt"))
+				.vocal_environment$checked <- TRUE
 				out[i] <- TRUE
 			}
 		} else {
