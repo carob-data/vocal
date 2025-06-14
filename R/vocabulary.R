@@ -51,7 +51,7 @@ set_vocabulary <- function(name) {
 get_vocabulary <- function() {
 	voc <- .vocal_environment$name
 	if (is.null(voc)) {
-		error("No vocabulary has been set", call. = FALSE)
+		stop("No vocabulary has been set", call. = FALSE)
 	}
 	voc
 }
@@ -130,7 +130,7 @@ clone_github <- function(name, path) {
 
 
 is_up2date <- function(gsha, gvoc) {
-	pvoc <- vocal:::vocabulary_path(gvoc)
+	pvoc <- vocabulary_path(gvoc)
 	f <- file.path(pvoc, "sha.txt")
 	if (file.exists(f)) {
 		rsha <- readLines(f)
@@ -151,7 +151,7 @@ check_one_vocabulary <- function(gvoc, update, force, quiet) {
 		} 
 
 		voc <- gsub("^github:", "", gvoc)
-		pth <- vocal:::vocabulary_path(gvoc)
+		pth <- vocabulary_path(gvoc)
 		
 		burl <- file.path("https://api.github.com/repos", voc)
 		# use GET instead to make sure it exists
@@ -241,55 +241,4 @@ obsolete_add_local <- function(voc, local_terms=NULL) {
 }
 
 
-
-
-..old_update_terms <- function(voc, quiet=FALSE, force=FALSE, local_terms=NULL) {
-	
-	pvoc <- vocabulary_path(voc)
-	dir.create(file.path(pvoc, "variables"), FALSE, TRUE)
-	dir.create(file.path(pvoc, "values"), FALSE, TRUE)
-
-	burl <- file.path("https://api.github.com/repos", voc)
-   	v <- readLines(file.path(burl, "commits/main"))
-	gsha <- jsonlite::fromJSON(v)$sha
-
-	f <- file.path(pvoc, "sha.txt")
-	continue <- TRUE
-	if (!force && file.exists(f)) {
-		rsha <- readLines(f)
-		if (gsha == rsha) {
-			if (!quiet) message("terms were up-to-date")
-			continue <- FALSE
-		}
-	}
-	git_updated <- FALSE
-	if (continue) {
-		message(paste("updating", voc, "to version", gsha)); utils::flush.console()
-		writeLines(gsha, file.path(pvoc, "sha.txt"))	
-		req <- httr::GET(file.path(burl, "git/trees/main?recursive=1"))
-		httr::stop_for_status(req)
-		ff <- sapply(httr::content(req)$tree, function(i) i$path)
-		ff <- grep("\\.csv$", ff, value = TRUE)
-   		rurl <- file.path("https://raw.githubusercontent.com", voc)
-		ff <- file.path(rurl, "main", ff)
-		i <- grepl("variables_", ff)
-		pva <- c("values", "variables")[i+1]
-		pva <- file.path(pvoc, pva, basename(ff))
-		for (i in 1:length(ff)) {
-			utils::download.file(ff[i], pva[i], quiet=TRUE)
-		}
-		git_updated <- TRUE
-		#gv <- readLines("https://raw.githubusercontent.com/carob-data/terminag/main/version.txt", warn = FALSE)
-		#gv <- trimws(unlist(strsplit(gv[grep("version", gv)], "="))[2])
-		#f <- system.file("terms/version.txt", package="carobiner")
-		#if (!file.exist(f)) return(TRUE)
-		#rv <- readLines(f)
-		#rv <- trimws(unlist(strsplit(rv[grep("version", rv)], "="))[2])
-	}
-
-	if (git_updated) {
-		add_local(pvoc, local_terms)
-	}
-	invisible(git_updated)
-}
 

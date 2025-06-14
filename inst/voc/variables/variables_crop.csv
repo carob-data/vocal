@@ -1,0 +1,7 @@
+name,type,unit,required,vocabulary,multiple_allowed,valid_min,valid_max,NAok,description,notes,obo
+trial_id,character,,yes,,no,,,yes,Identifier of a single trial in a single location and season (that may have treatments and replicates), should be unique within dataset_id,
+planting_date,character,,yes,,no,,,yes,"Planting date in ""yyyy-mm-dd"", ""yyyy-mm"", or ""yyyy"" format",,AGRO_00010099
+harvest_date,character,,no,,no,,,yes,"Harvest date in ""yyyy-mm-dd"", ""yyyy-mm"", or ""yyyy"" format",see harvest_days,AGRO_00010128
+crop,character,,yes,crop,no,,,yes,Crop name(s),,AGRO_00000325
+currency,character,,no,currency,no,,,yes,currency used for prices,,
+yield,numeric,,yes,,no,,,no,crop yield,,

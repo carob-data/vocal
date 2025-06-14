@@ -1,0 +1,9 @@
+name,type,unit,required,vocabulary,multiple_allowed,valid_min,valid_max,NAok,description,notes,obo
+authors,character,,yes,,yes,,,no,dataset authors,,
+title,character,,yes,,no,,,no,title,,
+description,character,,yes,,no,,,no,description,,
+license,character,,yes,,no,,,no,license that comes with the data,,
+publication,character,,yes,,no,,,yes,the doi of the associated publication (if any),,
+publisher,character,,no,,no,,,yes,organization  the data,,
+published,character,,no,,no,,,yes,date the data were published,,
+version,character,,no,,no,,,yes,the dataset version number,,

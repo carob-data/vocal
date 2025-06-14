@@ -39,28 +39,28 @@ accepted_values <- function(name) {
 
 
 
-.old.accepted_variables <- function(include=NULL) {
-	voc <- get_vocabulary()
-	p <- ifelse(grepl("github:", voc), vocabulary_path(voc), voc)
-	p <- vocabulary_path(voc)
-	if (is.null(include)) {
-		include <- get_variable_group_names(p)
-		include <- gsub("variables_|\\.csv$", "", include)
-	}
-	v <- lapply(include, function(inc) get_variables(inc, p))
-	return(do.call(rbind, v))	
-}
+# .old.accepted_variables <- function(include=NULL) {
+	# voc <- get_vocabulary()
+	# p <- ifelse(grepl("github:", voc), vocabulary_path(voc), voc)
+	# p <- vocabulary_path(voc)
+	# if (is.null(include)) {
+		# include <- get_variable_group_names(p)
+		# include <- gsub("variables_|\\.csv$", "", include)
+	# }
+	# v <- lapply(include, function(inc) get_variables(inc, p))
+	# return(do.call(rbind, v))	
+# }
 
 
-.old.accepted_values <- function(name) {
+# .old.accepted_values <- function(name) {
 
-	voc <- get_vocabulary()
-	p <- ifelse(grepl("github:", voc), vocabulary_path(voc), voc)
-	f <- file.path(p, "values", paste0("values_", name, ".csv"))
-	if (file.exists(f)) {
-		utils::read.csv(f)
-	} else {
-		NULL
-	}
-}
+	# voc <- get_vocabulary()
+	# p <- ifelse(grepl("github:", voc), vocabulary_path(voc), voc)
+	# f <- file.path(p, "values", paste0("values_", name, ".csv"))
+	# if (file.exists(f)) {
+		# utils::read.csv(f)
+	# } else {
+		# NULL
+	# }
+# }
 

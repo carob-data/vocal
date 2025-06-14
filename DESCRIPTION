@@ -4,6 +4,8 @@ Title: Compliance checking
 Description: Tools to check if data is compliant with a controlled vocabulary.
 Version: 0.3-1
 Imports: geodata, terra, httr, jsonlite, rappdirs
+Suggests: dplyr
+Depends: R (>= 4.1.0)
 Date: 2025-06-13
 Encoding: UTF-8
 Authors@R: c(
