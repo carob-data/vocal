@@ -125,7 +125,7 @@ clone_github <- function(name, path) {
 	for (d in outd) dir.create(d, FALSE, TRUE)
 	exf <- list.files(path, recursive=TRUE, full.names=TRUE)
 	file.remove(exf)	
-	all(file.rename(ff, outf))
+	all(file.copy(ff, outf))
 }
 
 
