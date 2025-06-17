@@ -60,8 +60,7 @@ get_vocabulary <- function() {
 has_names <- function(v, req) {
 	test <- sapply(v, \(i) req %in% names(i))
 	if (!(all(test))) {
-		bad <- names(v)[!test]
-		stop(paste("incomplete variables files", paste(bad, collapse=", ")))
+		stop("incomplete variables files")
 	}
 }
 
@@ -73,8 +72,9 @@ read_one_voc <- function(voc) {
 	gg <- gsub("^variables_|\\.csv$", "", basename(ff))
 	v <- lapply(1:length(ff), \(i) data.frame(group=gg[i], utils::read.csv(ff[i])))
 	if (length(ff) > 0) {
-		reqs <- c("name", "type", "required", "vocabulary", "multiple_allowed", "valid_min", "valid_max", "NAok")
+		reqs <- c("name", "type", "vocabulary", "valid_min", "valid_max")
 		has_names(v, reqs)
+		# "NAok", "multiple_allowed", "required", 
 	}
 	v <- do.call(dplyr::bind_rows, v)
 

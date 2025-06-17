@@ -16,6 +16,17 @@ accepted_values <- function(name) {
 	if (!isTRUE(.vocal_environment$read)) {
 		stop("no vocabulary data")
 	}
+	if (missing(name)) {
+		stop("provde a variable name")
+	}
+	name <- name[1]
+	if (!(name %in% names(.vocal_environment$voc$values))) {
+		if (!(name %in% names(.vocal_environment$voc$variables$name))) {
+			stop(paste(name, "is not a variable in this vocabuarly")	)
+		} else {
+			stop(paste(name, "does not have accepted values")	)
+		}
+	}
 	.vocal_environment$voc$values[[name]]
 }
 
