@@ -83,6 +83,8 @@ check_type_range <- function(x, trms, answ) {
 	}
 	cls <- cbind(cls, trs$type, nms)
 	cls <- cls[cls[,2] != "", ]
+	i <- (cls[,1] == "date") & (cls[,2] == "character")
+	cls[i, 1] <- "character"
 	i <- (cls[,1] == "integer") & (cls[,2] == "numeric")
 	cls[i, 1] <- "numeric"
 	i <- cls[,1] != cls[,2]
@@ -103,9 +105,11 @@ check_accepted <- function(x, trms, answ) {
 	for (i in 1:nrow(trms)) {
 		accepted <- accepted_values(trms$vocabulary[i])[,1]
 		provided <- unique(x[, trms$name[i]])
-		if (trms$required[i] != "yes") {
-			provided <- stats::na.omit(provided)
-		} 
+		if (!is.null(trms$required)) {
+			if (trms$required[i] != "yes") {
+				provided <- stats::na.omit(provided)
+			} 
+		}
 		if (length(provided) > 0) {
 			if (!is.null(trms$multiple_allowed)) {
 				if (trms$multiple_allowed[i] == "yes") {
