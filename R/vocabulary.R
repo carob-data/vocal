@@ -175,7 +175,7 @@ check_installed <- function() {
 		pvoc <- vocabulary_path(voc[i])
 		f <- file.path(pvoc, "sha.txt")
 		if (!file.exists(f)) {
-			message(paste("installing", voc[i])); flush.console()
+			message(paste("installing", voc[i])); utils::flush.console()
 			p <- vocabulary_path("github:")
 			v <- gsub("^github:", "", voc[i])
 			gsha <- github_sha(v)
