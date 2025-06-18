@@ -33,11 +33,16 @@ check_dups <- function(x) {
 	answ
 }
 
-check_variables <- function(x, trms) {
-	rbind(
-		check_known(x, trms),
-		check_required(x, trms),
-		check_dups(x)
-	)
+check_variables <- function(x, trms, required=TRUE, duplicates=TRUE) {
+	known <- check_known(x, trms)
+	if (required && duplicates) {
+		rbind(known, check_required(x, trms), check_dups(x))
+	} else if (required) {
+		rbind(known, check_required(x, trms))
+	} else if (duplicates) {
+		rbind(known, check_dups(x))	
+	} else {
+		known
+	}
 }
 
