@@ -197,23 +197,23 @@ check_installed <- function() {
 check_one_vocabulary <- function(gvoc, update, force, quiet) {
 
 		if (!grepl("^github:", gvoc)) {
-			return(TRUE)
+			return(FALSE)
 		} 
 
 		voc <- gsub("^github:", "", gvoc)
 		pth <- vocabulary_path(gvoc)
 		
 		gsha <- github_sha(voc)
-		if (is.na(gsha)) return(FALSE)
+		if (is.na(gsha)) return(NA)
 		
 		up2d <- try(is_up2date(gsha, gvoc))
 		if (inherits(up2d, "try-error")) {
 			if (!quiet) message("cannot update vocabulary")
-			return(FALSE)		
+			return(NA)		
 		}
 		if (up2d) {
 			if (!quiet) message("vocabulary is up-to-date")
-			return(TRUE)
+			return(FALSE)
 		}
 		if (!update) {
 			if (!quiet) message("the vocabulary is not up-to-date")
@@ -227,7 +227,7 @@ check_one_vocabulary <- function(gvoc, update, force, quiet) {
 			result <- TRUE
 		} else {
 			if (!quiet) message("update failed"); utils::flush.console()
-			result <- FALSE
+			result <- NA
 		}
 		result
 }
@@ -243,12 +243,19 @@ check_vocabulary <- function(update=TRUE, force=FALSE, quiet=FALSE) {
 	for (i in 1:length(voc)) {
 		out[i] <- check_one_vocabulary(voc[i], update=update, force=force, quiet=quiet)
 	}
-	if (!all(out)) {
-		warning(paste("could not check for update:", paste(voc[!all], collapse="; ")))
+	if (any(is.na(out))) {
+		warning(paste("could not check for update:", paste(voc[is.na(out)], collapse="; ")))
 		FALSE
 	}
+	if (isTRUE(any(out, na.rm=TRUE))) {
+		d <- try(read_vocabulary())
+		if (!inherits(d, "try-error")) {
+			.vocal_environment$voc <- d
+			.vocal_environment$read <- TRUE
+		}
+	}
 	.vocal_environment$checked <- TRUE
-	TRUE
+	!any(is.na(out))
 }
 
 

@@ -22,7 +22,7 @@ check_date <- function(x, name, trms=NULL) {
 		answ[nrow(answ)+1, ] <- c("invalid date format(s)", name)
 	}
 	today <- as.Date(Sys.time())
-	ymd <- x[n==10]
+	ymd <- na.omit(x[n==10])
 #	if (any(is.na(ymd))) {
 #		return(FALSE)
 #	}
@@ -34,21 +34,23 @@ check_date <- function(x, name, trms=NULL) {
 		if (any(ymd > today)) {
 			answ[nrow(answ)+1, ] <- c("date", paste0("future date(s) in: ", name))
 		}
-		m <- as.numeric(substr(ymd, 6, 7))
-		if (any((m < 1) | (m > 12))) {
-			answ[nrow(answ)+1, ] <- c("date", paste0("months not between 1 and 12): ", name))
-		} 
+		m <- na.omit(substr(ymd, 6, 7))
+		if (length(m) > 0) {
+			m <- as.numeric(m)
+			if (any((m < 1) | (m > 12))) {
+				answ[nrow(answ)+1, ] <- c("date", paste0("months not between 1 and 12): ", name))
+			} 
+		}
 	}
-	
 	thisyear <- as.numeric(format(today, "%Y"))
 	today <- as.character(today)
-	ym <- x[n==7]
+	ym <- na.omit(x[n==7])
 	if (length(ym) > 0) {
 		d <- substr(ym, 5, 5)
 		if (any(d != "-")) {
 			answ[nrow(answ)+1, ] <- c("date", paste0("bad date(s) in: ", name))
 		}
-		y <- as.numeric(substr(ym, 1, 4))
+		y <- na.omit(as.numeric(substr(ym, 1, 4)))
 		if (any(y < 1960)) {
 			answ[nrow(answ)+1, ] <- c("date", paste0("date(s) before 1960 in: ", name))
 		} 
@@ -56,13 +58,13 @@ check_date <- function(x, name, trms=NULL) {
 			answ[nrow(answ)+1, ] <- c("date", paste0("date(s) after ", thisyear, " in: ", name))
 		}
 
-		m <- as.numeric(substr(ym, 6, 7))
+		m <- na.omit(as.numeric(substr(ym, 6, 7)))
 		if (any((m < 1) | (m > 12))) {
 			answ[nrow(answ)+1, ] <- c("date", paste0("months not between 1 and 12): ", name))
 		} 
 	}
 
-	y <- x[n==4]
+	y <-  na.omit(x[n==4])
 	if (length(y) > 0) {
 		y <- as.numeric(y)
 		if (any(y < 1960)) {

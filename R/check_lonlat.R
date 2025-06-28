@@ -4,9 +4,14 @@ check_lonlat <- function(x) {
 	answ <- data.frame(check="", msg="")[0,]
 
 	if (!all(c("longitude", "latitude") %in% colnames(x))) {
-		answ[nrow(answ)+1, ] <- c("lonlat", paste0("longitude/latitude are missing"))
+		answ[nrow(answ)+1, ] <- c("location", paste0("variables 'longitude' and/or 'latitude' are missing"))
 		return(answ)
 	}
+	if (!("country" %in% colnames(x))) {
+		answ[nrow(answ)+1, ] <- c("location", paste0("variable 'country' is missing"))
+		return(answ)
+	}
+
 #	path <- system.file(package="carobiner")
 	p <- file.path(rappdirs::user_data_dir(), ".carob")
 
