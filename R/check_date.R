@@ -19,7 +19,7 @@ check_date <- function(x, name, trms=NULL) {
 	
 	n <- nchar(x)
 	if (any(!(n %in% c(4, 7, 10)))) {
-		answ[nrow(answ)+1, ] <- c("invalid date format(s)", name)
+		answ[nrow(answ)+1, ] <- c("invalid date format", name)
 	}
 	today <- as.Date(Sys.time())
 	ymd <- na.omit(x[n==10])
@@ -28,6 +28,10 @@ check_date <- function(x, name, trms=NULL) {
 #	}
 	if (length(ymd) > 0) {
 		d <- as.Date(ymd)
+		if (any(is.na(d))) {
+			answ[nrow(answ)+1, ] <- c("date", paste0("invalid date(s) in: ", name))
+			d <- na.omit(d)
+		}
 		if (any(ymd < as.Date("1950-01-01"))) {
 			answ[nrow(answ)+1, ] <- c("date", paste0("date(s) before 1950 in: ", name))
 		}
