@@ -32,10 +32,10 @@ check_date <- function(x, name, trms=NULL) {
 			answ[nrow(answ)+1, ] <- c("date", paste0("invalid date(s) in: ", name))
 			d <- na.omit(d)
 		}
-		if (any(ymd < as.Date("1950-01-01"))) {
+		if (any(ymd < as.Date("1950-01-01"), na.rm=TRUE)) {
 			answ[nrow(answ)+1, ] <- c("date", paste0("date(s) before 1950 in: ", name))
 		}
-		if (any(ymd > today)) {
+		if (any(ymd > today, na.rm=TRUE)) {
 			answ[nrow(answ)+1, ] <- c("date", paste0("future date(s) in: ", name))
 		}
 		m <- na.omit(substr(ymd, 6, 7))
