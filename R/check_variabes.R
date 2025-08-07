@@ -12,8 +12,8 @@ check_known <- function(x, trms) {
 
 check_required <- function(x, trms, type="") {
 	answ <- data.frame(check="", msg="")[0,]
-	
-	req <- trms[trms$required == "yes", "name"]  #| trms$required == group
+	if (is.null(trms$required)) return(answ)
+	req <- trms[which(trms$required == "yes"), "name"]  #| trms$required == group
 	r <- req[!(req %in% names(x))]
 	if (length(r) > 0) {
 		if (type != "") type <- paste0(type, ": ")

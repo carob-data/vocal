@@ -3,11 +3,19 @@ check_missingvalues <- function(x, trms) {
 	answ <- data.frame(check="", msg="")[0,]
 	nms <- trms$name[which(trms$NAok == "no")]
 	nms <- nms[nms %in% names(x)]
-	for (i in length(nms)) {
-		j <- is.na(x[,nms[i]])
-		if (any(j)) {
-			answ[nrow(answ)+1, ] <- c("NA values", paste(nms[i], collapse=", "))
+	x <- is.na(x[,nms,drop=FALSE])
+	a <- apply(x, 2, all)
+	if (any(a)) {
+		answ[nrow(answ)+1, ] <- c("all NA", paste(nms[a], collapse=", "))
+		x <- x[, !a, drop=FALSE]
+		if (ncol(x) == 0) {
+			return(answ)
 		}
+	}
+
+	a <- apply(x, 2, any)
+	if (any(a)) {
+		answ[nrow(answ)+1, ] <- c("NA values", paste(nms[a], collapse=", "))
 	}
 	answ
 }
