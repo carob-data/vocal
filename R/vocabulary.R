@@ -138,14 +138,14 @@ clone_github <- function(name, path) {
 }
 
 
-is_up2date <- function(gsha, gvoc) {
+is_up2date <- function(gsha, gvoc, delay) {
 	pvoc <- vocabulary_path(gvoc)
 	f <- file.path(pvoc, "sha.txt")
 	if (file.exists(f)) {
 		rsha <- readLines(f)
 		if (gsha == rsha) {
 			return(TRUE)
-		}
+		}		
 	}
 	return(FALSE)
 }
@@ -194,7 +194,7 @@ check_installed <- function() {
 
 
 
-check_one_vocabulary <- function(gvoc, update, force, quiet) {
+check_one_vocabulary <- function(gvoc, update, force, quiet, delay=0) {
 
 		if (!grepl("^github:", gvoc)) {
 			return(FALSE)
@@ -202,11 +202,21 @@ check_one_vocabulary <- function(gvoc, update, force, quiet) {
 
 		voc <- gsub("^github:", "", gvoc)
 		pth <- vocabulary_path(gvoc)
+
+# check/update delay
+		f <- file.path(pth, "sha.txt")
+		if (file.exists(f)) {
+			info <- file.info(f)
+			hrs <- as.double(Sys.time() - info$mtime, units = "hours")
+			if (hrs < delay) {
+				return(FALSE)
+			}
+		}
 		
 		gsha <- github_sha(voc)
 		if (is.na(gsha)) return(NA)
 		
-		up2d <- try(is_up2date(gsha, gvoc))
+		up2d <- try(is_up2date(gsha, gvoc, delay))
 		if (inherits(up2d, "try-error")) {
 			if (!quiet) message("cannot update vocabulary")
 			return(NA)		
@@ -233,7 +243,7 @@ check_one_vocabulary <- function(gvoc, update, force, quiet) {
 }
 
 
-check_vocabulary <- function(update=TRUE, force=FALSE, quiet=FALSE) {
+check_vocabulary <- function(update=TRUE, force=FALSE, delay=0, quiet=FALSE) {
 
 	if ((!force) && isTRUE(.vocal_environment$checked)) {
 		return(TRUE)
@@ -241,7 +251,7 @@ check_vocabulary <- function(update=TRUE, force=FALSE, quiet=FALSE) {
 	voc <- get_vocabulary()
 	out <- rep(FALSE, length(voc))
 	for (i in 1:length(voc)) {
-		out[i] <- check_one_vocabulary(voc[i], update=update, force=force, quiet=quiet)
+		out[i] <- check_one_vocabulary(voc[i], update=update, force=force, delay=delay, quiet=quiet)
 	}
 	if (any(is.na(out))) {
 		warning(paste("could not check for update:", paste(voc[is.na(out)], collapse="; ")))
