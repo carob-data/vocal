@@ -1,6 +1,6 @@
 Package: vocal
 Type: Package
-Title: Compliance checking
+Title: Controlled vocabulary compliance checking
 Description: Tools to check if data is compliant with a controlled vocabulary.
 Version: 0.3-5
 Imports: geodata, terra, httr, jsonlite, rappdirs
