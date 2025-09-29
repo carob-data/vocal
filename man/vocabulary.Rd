@@ -20,7 +20,7 @@ check_vocabulary(update=TRUE, force=FALSE, delay=0, quiet=FALSE)
 }
  
 \arguments{
-  \item{name}{character. A vocabulary name such as "github:carob-data/terminag"}
+  \item{name}{character. A vocabulary name such as "github:controvoc/terminag"}
   \item{update}{logical. Shoud the vocabulary be updated if it is out-of-date?}
   \item{force}{logical. If \code{FALSE} only one check is done per session}
   \item{delay}{non-negative number. The minimum number of hours between updates}
@@ -32,7 +32,7 @@ character
 }
 
 \examples{
-set_vocabulary("github:carob-data/terminag")
+set_vocabulary("github:controvoc/terminag")
 get_vocabulary()
 
 check_vocabulary(update=FALSE)

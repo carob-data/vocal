@@ -24,7 +24,7 @@ character
 }
 
 \examples{
-set_vocabulary("github:carob-data/terminag")
+set_vocabulary("github:controvoc/terminag")
 v <- accepted_values("fertilizer_type")
 head(v)
 }

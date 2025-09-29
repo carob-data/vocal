@@ -29,7 +29,7 @@ check_datespan(x, startdate, enddate, smin=0, smax=366)
  
 \arguments{
   \item{x}{data.frame to check}
-  \item{trms}{data.frame with the vocabulary. E.g. \code{accepted_values("github:carob-data/terminag")}}
+  \item{trms}{data.frame with the vocabulary. E.g. \code{accepted_values("github:controvoc/terminag")}}
   \item{required}{logical. If \code{TRUE} the presence of required variables is checked}
   \item{name}{character. The variable name. For example, "planting_date"}
   \item{vars}{character. The variables to check}
