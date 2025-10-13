@@ -39,7 +39,7 @@ set_vocabulary <- function(name, update=TRUE, force=FALSE, quiet=FALSE) {
 		.vocal_environment$name <- name
 		.vocal_environment$checked <- FALSE
 		.vocal_environment$read <- FALSE
-		check_installed()
+		check_installed(name)
 		d <- try(read_vocabulary())
 		if (!inherits(d, "try-error")) {
 			.vocal_environment$voc <- d
@@ -163,8 +163,7 @@ github_sha <- function(voc) {
 }
 
 
-check_installed <- function() {
-	voc <- get_vocabulary()
+check_installed <- function(voc) {
 	if (length(voc) < 1) return(NA)
 	out <- rep(NA, length(voc))
 	for (i in 1:length(voc)) {
@@ -172,7 +171,7 @@ check_installed <- function() {
 			out[i] <- TRUE
 			next
 		}
-		pvoc <- vocabulary_path(voc[i])
+		pvoc <- vocal:::vocabulary_path(voc[i])
 		f <- file.path(pvoc, "sha.txt")
 		if (!file.exists(f)) {
 			message(paste("installing", voc[i])); utils::flush.console()
